@@ -1,0 +1,19 @@
+{
+  "name": "ghl-address-enrichment",
+  "version": "1.0.0",
+  "description": "One-off safety-net service: pulls GHL conversations/notes/call transcripts for a contact, extracts a stated address via Claude, and writes it back to the contact record.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "openai": "^4.70.0",
+    "express": "^4.21.1",
+    "dotenv": "^16.4.5"
+  }
+}
