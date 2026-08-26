@@ -49,7 +49,14 @@ app.post('/enrich-address', async (req, res) => {
   console.log('  content-type:', req.header('content-type'));
   console.log('  raw body:', JSON.stringify(req.body));
 
-  const { contactId, address, city, state, zip, propertyType, sqft } = req.body || {};
+  // GHL's Workflow Webhook action nests the fields you mapped under a
+  // top-level `customData` object, alongside dozens of default GHL
+  // fields (contact_id, tags, location, workflow, etc.) - confirmed
+  // empirically from a real webhook payload. Check customData first,
+  // but fall back to the top level so flat test payloads (e.g. direct
+  // PowerShell/Postman calls) keep working unchanged.
+  const payload = req.body?.customData || req.body || {};
+  const { contactId, address, city, state, zip, propertyType, sqft } = payload;
 
   if (!contactId) {
     return res.status(400).json({ error: 'contactId is required', receivedBody: req.body || null });
