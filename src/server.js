@@ -41,10 +41,18 @@ app.get('/health', (req, res) => res.json({ ok: true }));
  * they just won't be persisted to GHL.
  */
 app.post('/enrich-address', async (req, res) => {
+  // Diagnostic logging - shows up in Railway's logs. Helps confirm
+  // whether an external caller (e.g. a GHL Workflow webhook) is actually
+  // sending JSON with the right content-type and field names, vs.
+  // sending something Express can't parse into req.body at all.
+  console.log('POST /enrich-address received');
+  console.log('  content-type:', req.header('content-type'));
+  console.log('  raw body:', JSON.stringify(req.body));
+
   const { contactId, address, city, state, zip, propertyType, sqft } = req.body || {};
 
   if (!contactId) {
-    return res.status(400).json({ error: 'contactId is required' });
+    return res.status(400).json({ error: 'contactId is required', receivedBody: req.body || null });
   }
 
   const existing = {
