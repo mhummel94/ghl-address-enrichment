@@ -52,6 +52,13 @@ const ADVANCED_TYPE_MAP = {
   'duplex': GHL_OPTIONS.MFU_2_4,
   'triplex': GHL_OPTIONS.MFU_2_4,
   'quadruplex': GHL_OPTIONS.MFU_2_4,
+  // Confirmed via real data (National City property, 4 beds/4 baths):
+  // PropertyRadar uses this generic label for small multi-unit
+  // properties too, not just larger apartment buildings. Treated as
+  // MFU (2-4) per explicit decision - accepts the risk that a larger
+  // "dwelling" could occasionally be mislabeled, in exchange for not
+  // missing legitimate small multi-family properties like this one.
+  'multi family dwelling': GHL_OPTIONS.MFU_2_4,
 };
 
 // Fallback keyed by lowercased basic PType value - used ONLY when
