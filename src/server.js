@@ -49,6 +49,16 @@ app.post('/enrich-address', async (req, res) => {
   console.log('  content-type:', req.header('content-type'));
   console.log('  raw body:', JSON.stringify(req.body));
 
+  // Logs the full outgoing response (pretty-printed) right in Railway's
+  // logs before sending it, so a run's request AND result sit together
+  // in one place - no need to reconstruct it from GHL's escaped
+  // "webhook response" string in the workflow execution history.
+  const sendAndLog = (statusCode, body) => {
+    console.log(`POST /enrich-address responding ${statusCode}:`);
+    console.log(JSON.stringify(body, null, 2));
+    return res.status(statusCode).json(body);
+  };
+
   // GHL's Workflow Webhook action nests the fields you mapped under a
   // top-level `customData` object, alongside dozens of default GHL
   // fields (contact_id, tags, location, workflow, etc.) - confirmed
@@ -59,7 +69,7 @@ app.post('/enrich-address', async (req, res) => {
   const { contactId, address, city, state, zip, propertyType, sqft } = payload;
 
   if (!contactId) {
-    return res.status(400).json({ error: 'contactId is required', receivedBody: req.body || null });
+    return sendAndLog(400, { error: 'contactId is required', receivedBody: req.body || null });
   }
 
   const existing = {
@@ -76,7 +86,7 @@ app.post('/enrich-address', async (req, res) => {
     .map(([k]) => k);
 
   if (missingFields.length === 0) {
-    return res.json({
+    return sendAndLog(200, {
       contactId,
       status: 'skipped',
       reason: 'no missing fields - nothing to enrich',
@@ -200,11 +210,11 @@ app.post('/enrich-address', async (req, res) => {
     };
 
     if (coreFieldsToWrite.length === 0 && customFieldsToWrite.length === 0) {
-      return res.json({ ...response, status: 'no_address_found' });
+      return sendAndLog(200, { ...response, status: 'no_address_found' });
     }
 
     if (config.service.dryRun) {
-      return res.json({ ...response, status: 'dry_run_not_written' });
+      return sendAndLog(200, { ...response, status: 'dry_run_not_written' });
     }
 
     const writeResult = await updateContactAddress(contactId, {
@@ -214,10 +224,10 @@ app.post('/enrich-address', async (req, res) => {
       postalCode: merged.postalCode,
       customFields: customFieldsToWrite,
     });
-    return res.json({ ...response, status: 'written', ghlResponse: writeResult });
+    return sendAndLog(200, { ...response, status: 'written', ghlResponse: writeResult });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: err.message });
+    return sendAndLog(500, { error: err.message });
   }
 });
 
